@@ -39,7 +39,8 @@ class ObjectPage(object):
             options.add_argument(
                 'user-agent="Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"'
             )
-            self.driver = webdriver.Chrome(chrome_options=options)
+            path = "../resources/driver/chromedriver_80"
+            self.driver = webdriver.Chrome(executable_path=path, chrome_options=options)
         return self.driver
 
     def getUrl(self, url):
