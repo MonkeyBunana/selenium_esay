@@ -1,10 +1,10 @@
 ## 基于Selenium的自动化测试框架
-针对有编程基础的测试人员使用的测试框架，封装各类型的方法，旨在能更快更有效率编写脚本。
+针对有编程基础的测试人员编写的测试框架，封装各类型的方法，旨在能更快更有效率编写脚本。
 
 #### 特性    
-* 框架采用Pyhton语言编写，使用Selenium和unittest框架作为基础进行封装。
+* 框架采用 Python 语言编写，使用 Selenium 和 unittest 框架作为基础进行封装。
 * 基于 Page Object 设计模式，将 UI 界面抽象为 Page Object，可以减少重复代码和降低维护成本。
-* 使用HTMLTestRunner，得到简洁明了的测试报告。
+* 使用 HTMLTestRunner，得到简单直观的测试结果。
 
 #### 框架目录构造
 * common: 封装的各种方法，如selenium、日志、读取Excel、发送Email等方法
