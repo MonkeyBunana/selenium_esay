@@ -117,4 +117,3 @@ class TestSimpleFromPage(unittest.TestCase):
 * 加入多线程，解决运行时的超时问题
 
 PS: 本测试框架测试的网页暂时为：https://www.seleniumeasy.com/test/
-

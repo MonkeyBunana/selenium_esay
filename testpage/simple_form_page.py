@@ -23,6 +23,7 @@ class SimpleFormPage(BasePage):
         return self.driver.getText(display)
 
     def run_case_two_input_fields(self, sum1, sum2):
+        # 网站代码好像改了，之后再说 :)
         inputSum1 = self.driver.findElement("id", "sum1")
         self.driver.sendKeys(inputSum1, sum1)
         inputSum2 = self.driver.findElement("id", "sum2")

@@ -19,37 +19,47 @@ from common.page_read import ReadConfig
 
 class ObjectPage(object):
 
+    browser = ReadConfig().getValue(section='browserType', name='browserName')
+
+    chrome_driver_path = ReadConfig().getValue(section='located', name='chromedriverpath')
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('disable-infobars')
+    chrome_options.add_argument("headless")
+    chrome_options.add_argument('profile.managed_default_content_settings.images')
+    chrome_options.add_argument('lang=zh_CN.UTF-8')
+    chrome_options.add_argument('user-agent="Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"')
+
+    firefox_driver_path = ReadConfig().getValue(section='located', name='firefoxdriverpath')
+    firefox_log_path = ReadConfig().getValue(section='located', name='firefox_log')
+    firefox_options = webdriver.FirefoxOptions()
+    firefox_options.add_argument('--log error')
+    firefox_options.add_argument('--headless')
+    firefox_options.add_argument('--disable-gpu')  # 禁用GPU加速
+
     def __init__(self):
-        driver = self.getBrowser()
+        driver = self.getBrowsers()
         try:
             log1.info("-------------------- test start --------------------")
             self.driver = driver
             log1.info("Load Web Driver Success")
         except Exception:
             log1.error("Load Web Driver Fail", exc_info=1)
+            self.getImage("Load Web Driver Fail")
 
-    def getBrowser(self):
-        browser = ReadConfig().getValue(section='browserType', name='browserName')
-        if browser == "Chrome":
-            options = webdriver.ChromeOptions()
-            options.add_argument('disable-infobars')
-            options.add_argument("headless")
-            options.add_argument('profile.managed_default_content_settings.images')
-            options.add_argument('lang=zh_CN.UTF-8')
-            options.add_argument(
-                'user-agent="Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36"'
-            )
-            path = "../resources/driver/chromedriver_80"
-            self.driver = webdriver.Chrome(executable_path=path, chrome_options=options)
+    def getBrowsers(self):
+        if self.browser == "Chrome":
+            self.driver = webdriver.Chrome(executable_path = self.chrome_driver_path, chrome_options = self.chrome_options)
+        elif self.browser == "Firefox":
+            self.driver = webdriver.Firefox(executable_path = self.firefox_driver_path, firefox_options = self.firefox_options, log_path = self.firefox_log_path)
         return self.driver
 
     def getUrl(self, url):
         self.driver.get(url)
-        log1.info("Set Url")
+        log1.info("Set Url is: "+url)
 
     def hideWait(self, times):
         self.driver.implicitly_wait(times)
-        log1.info("Set Implicitly Wait")
+        log1.info("Set Implicitly Wait: "+str(times))
 
     def maximizeWindow(self):
         self.driver.maximize_window()
@@ -64,18 +74,20 @@ class ObjectPage(object):
         log1.info("Browser Refresh")
 
     def getCurrentUrl(self):
-        log1.info("Get Browser Url")
-        return self.driver.current_url()
+        url = self.driver.current_url()
+        log1.info("Get Browser Url, The Url is: "+url)
+        return url
 
     @staticmethod
     def isDisplayed(element):
-        log1.info("Element is displayed")
-        return element.is_displayed()
+        is_display = element.is_displayed()
+        log1.info("Element displayed is: "+is_display)
+        return is_display
 
     @staticmethod
     def sleepWait(times):
         time.sleep(times)
-        log1.info("Set Sleep Time")
+        log1.info("Set Sleep Time is: "+str(times))
 
     @staticmethod
     def isSelect(element):
@@ -83,92 +95,124 @@ class ObjectPage(object):
         return element.is_selected()
 
     def findElement(self, by, value):
-        element = None
-        if by in ['id', 'name', 'class', 'tag', 'link', 'plink', 'css', 'xpath']:
+        by_map = {'id': By.ID, 'name': By.NAME, 'class': By.CLASS_NAME, 'tag': By.TAG_NAME, 'link': By.LINK_TEXT, 'plink': By.PARTIAL_LINK_TEXT, 'css': By.CSS_SELECTOR, 'xpath': By.XPATH}
+        if by in by_map.keys():
             try:
-                if by == 'id':
-                    element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
-                        EC.presence_of_element_located((By.ID, value)))
-                    log1.info("Id Query Element "+value)
-                elif by == 'name':
-                    element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
-                        EC.presence_of_element_located((By.NAME, value)))
-                    log1.info("Name Query Element "+value)
-                elif by == 'class':
-                    element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
-                        EC.presence_of_element_located((By.CLASS_NAME, value)))
-                    log1.info("Class Name Query Element "+value)
-                elif by == 'tag':
-                    element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
-                        EC.presence_of_element_located((By.TAG_NAME, value)))
-                    log1.info("Tag Name Query Element "+value)
-                elif by == 'link':
-                    element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
-                        EC.presence_of_element_located((By.LINK_TEXT, value)))
-                    log1.info("Link Query Element "+value)
-                elif by == 'plink':
-                    element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
-                        EC.presence_of_element_located((By.PARTIAL_LINK_TEXT, value)))
-                    log1.info("Partial Link Query Element "+value)
-                elif by == 'css':
-                    element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
-                        EC.presence_of_element_located((By.CSS_SELECTOR, value)))
-                    log1.info("Css Query Element "+value)
-                elif by == 'xpath':
-                    element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
-                        EC.presence_of_element_located((By.XPATH, value)))
-                    log1.info("Xpath Query Element "+value)
-                log1.info("Found Element")
+                element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+                    EC.presence_of_element_located((by_map[by], value)))
+                log1.info(by+" Query Element: "+value)
                 return element
             except NoSuchElementException:
-                log1.error("Not Found Element", exc_info=1)
+                log1.error("Not Found Element Or Timeout", exc_info=1)
+                self.getImage("Not Found Element Or Timeout")
         else:
-            log1.error("Location Error", exc_info=1)
+            log1.error(by+" Variable Error", exc_info=1)
+            self.getImage(by+" Variable Error")
+        # element = None
+        # if by in ['id', 'name', 'class', 'tag', 'link', 'plink', 'css', 'xpath']:
+        #     try:
+        #         if by == 'id':
+        #             element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+        #                 EC.presence_of_element_located((By.ID, value)))
+        #             log1.info("Id Query Element: "+value)
+        #         elif by == 'name':
+        #             element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+        #                 EC.presence_of_element_located((By.NAME, value)))
+        #             log1.info("Name Query Element: "+value)
+        #         elif by == 'class':
+        #             element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+        #                 EC.presence_of_element_located((By.CLASS_NAME, value)))
+        #             log1.info("Class Name Query Element: "+value)
+        #         elif by == 'tag':
+        #             element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+        #                 EC.presence_of_element_located((By.TAG_NAME, value)))
+        #             log1.info("Tag Name Query Element: "+value)
+        #         elif by == 'link':
+        #             element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+        #                 EC.presence_of_element_located((By.LINK_TEXT, value)))
+        #             log1.info("Link Query Element: "+value)
+        #         elif by == 'plink':
+        #             element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+        #                 EC.presence_of_element_located((By.PARTIAL_LINK_TEXT, value)))
+        #             log1.info("Partial Link Query Element: "+value)
+        #         elif by == 'css':
+        #             element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+        #                 EC.presence_of_element_located((By.CSS_SELECTOR, value)))
+        #             log1.info("Css Query Element: "+value)
+        #         elif by == 'xpath':
+        #             element = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+        #                 EC.presence_of_element_located((By.XPATH, value)))
+        #             log1.info("Xpath Query Element: "+value)
+        #         return element
+        #     except NoSuchElementException:
+        #         log1.error("Not Found Element Or Timeout", exc_info=1)
+        #         self.getImage("Not Found Element Or Timeout")
+        #
+        # else:
+        #     log1.error("Variable Error", exc_info=1)
+        #     self.getImage("Variable Error")
 
     def findElements(self, by, value):
-        element = None
-        if by in ['id', 'name', 'class', 'tag', 'link', 'plink', 'css', 'xpath']:
+        by_map = {'id': By.ID, 'name': By.NAME, 'class': By.CLASS_NAME, 'tag': By.TAG_NAME, 'link': By.LINK_TEXT,
+                  'plink': By.PARTIAL_LINK_TEXT, 'css': By.CSS_SELECTOR, 'xpath': By.XPATH}
+        if by in by_map.keys():
             try:
-                if by == 'id':
-                    element = self.driver.find_elements_by_id(value)
-                    log1.info("Id Query Elements "+value)
-                elif by == 'name':
-                    element = self.driver.find_elements_by_name(value)
-                    log1.info("Name Query Elements "+value)
-                elif by == 'class':
-                    element = self.driver.find_elements_by_class_name(value)
-                    log1.info("Class Name Query Elements "+value)
-                elif by == 'tag':
-                    element = self.driver.find_elements_by_tag_name(value)
-                    log1.info("Tag Name Query Elements "+value)
-                elif by == 'link':
-                    element = self.driver.find_elements_by_link_text(value)
-                    log1.info("Link Query Elements "+value)
-                elif by == 'plink':
-                    element = self.driver.find_elements_by_partial_link_text(value)
-                    log1.info("Partial Link Query Elements "+value)
-                elif by == 'css':
-                    element = self.driver.find_elements_by_css_selector(value)
-                    log1.info("Css Query Elements "+value)
-                elif by == 'xpath':
-                    element = self.driver.find_elements_by_xpath(value)
-                    log1.info("Xpath Query Elements "+value)
-                log1.info("Found Element")
-                return element
+                elements = WebDriverWait(self.driver, 10, ignored_exceptions=None).until(
+                    EC.presence_of_all_elements_located((by_map[by], value)))
+                log1.info(by + " Query Element: " + value)
+                return elements
             except NoSuchElementException:
-                log1.error("Not Found Element", exc_info=1)
+                log1.error("Not Found Element Or Timeout", exc_info=1)
+                self.getImage("Not Found Element Or Timeout")
         else:
-            log1.error("Location Error", exc_info=1)
+            log1.error(by + " Variable Error", exc_info=1)
+            self.getImage(by + " Variable Error")
+        # element = None
+        # if by in ['id', 'name', 'class', 'tag', 'link', 'plink', 'css', 'xpath']:
+        #     try:
+        #         if by == 'id':
+        #             element = self.driver.find_elements_by_id(value)
+        #             log1.info("Id Query Elements "+value)
+        #         elif by == 'name':
+        #             element = self.driver.find_elements_by_name(value)
+        #             log1.info("Name Query Elements "+value)
+        #         elif by == 'class':
+        #             element = self.driver.find_elements_by_class_name(value)
+        #             log1.info("Class Name Query Elements "+value)
+        #         elif by == 'tag':
+        #             element = self.driver.find_elements_by_tag_name(value)
+        #             log1.info("Tag Name Query Elements "+value)
+        #         elif by == 'link':
+        #             element = self.driver.find_elements_by_link_text(value)
+        #             log1.info("Link Query Elements "+value)
+        #         elif by == 'plink':
+        #             element = self.driver.find_elements_by_partial_link_text(value)
+        #             log1.info("Partial Link Query Elements "+value)
+        #         elif by == 'css':
+        #             element = self.driver.find_elements_by_css_selector(value)
+        #             log1.info("Css Query Elements "+value)
+        #         elif by == 'xpath':
+        #             element = self.driver.find_elements_by_xpath(value)
+        #             log1.info("Xpath Query Elements "+value)
+        #         log1.info("Found Element")
+        #         return element
+        #     except NoSuchElementException:
+        #         log1.error("Not Found Element Or Timeout", exc_info=1)
+        #         self.getImage("Not Found Element Or Timeout")
+        # else:
+        #     log1.error("Variable Error", exc_info=1)
+        #     self.getImage("Variable Error")
 
     @staticmethod
-    def sendKeys(element, text):
+    def sendKeys(self, element, text):
         element.clear()
-        log1.info("Element Clear")
+        log1.info("Element Clear Text")
         try:
             element.send_keys(text)
-            log1.info("Element Input")
+            log1.info("Element Input Text: "+text)
         except BaseException:
-            log1.error("Input Error", exc_info=1)
+            log1.error("Not Found Element Or Input Error", exc_info=1)
+            self.getImage("Not Found Element Or Input Error")
 
     def click(self, element):
         try:
@@ -256,14 +300,14 @@ class ObjectPage(object):
             log1.error("Screenshot Image Fail", exc_info=1)
 
     def textAlert(self):
-        log1.info("Get Alert Text")
         t = str(self.driver.switch_to.alert.text)
+        log1.info("Get Alert Text: "+t)
         self.acceptAlert()
         return t
 
     def sendKeysAlert(self, text):
         self.driver.switch_to.alert.send_keys(text)
-        log1.info("Input Alert Text")
+        log1.info("Input Alert Text: "+text)
         self.acceptAlert()
 
     def acceptAlert(self):

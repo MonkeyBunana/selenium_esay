@@ -15,4 +15,5 @@ class ReadConfig:
 
 
 if __name__ == "__main__":
-    print(ReadConfig().getValue(section='browserType', name='browserName'))
+    browser = ReadConfig().getValue(section='browserType', name='browserName').split(",")
+    print(len(browser))
